@@ -18,17 +18,34 @@ void endCurses();
 
 int main() {
     char input;
+    int time = 115;
     int x,y; //window pos
+    string test;
+
+    //Do map stuff, use standard IO
+    cin>>test;
+    cout<<test;
+
+    //do game setup
+
+    //init curses window
     initCurses();
     getyx(stdscr,y,x);
-    while (input != 'q')
+
+    //game loop
+    while (input != 'q' && time != 0)
     {
         input = wgetch(stdscr);
-        move(y,0); //move cursor to current line start
-        clrtoeol(); //clear to EoL
+//        move(y,0); //move cursor to current line start
+//        clrtoeol(); //clear to EoL
 //        move(y,x); //move cursor back //may not be needed with EOL
+        clear();
+        printw("Time left: %d\n",time);
         printw("%c",input);
+        time--;
     }
+
+    //game is over
     endCurses();
     return 0;
 }
@@ -43,6 +60,7 @@ void initCurses(){
 }
 void endCurses(){
     refresh();
-//    getch(); //Make user press any key to close
+    printw("\nRound over\n");
+    getch(); //Make user press any key to close
     endwin();
 }
