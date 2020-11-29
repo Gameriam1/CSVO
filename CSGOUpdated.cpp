@@ -2,7 +2,7 @@
 /*
  * The actual in main
  */
-#include <string>
+//#include <string>
 #include <iostream>
 #include<fstream>       //File Streams
 #include<ncurses.h>     //N Curses Library
@@ -16,14 +16,11 @@ using namespace std;
 
 
 
-
-
-
-
  void initCurses();
  void endCurses();
 class CharMap {
   public:
+    CharMap();
     CharMap(char *arg);
     CharMap(char** c, std::string m, int w, int h) : 
         map(c), mapName(m), width(w), height(h){}
@@ -37,70 +34,9 @@ class CharMap {
 
 
 
-
-/*
-int main() {
-    char input;
-    int time = 115;
-    int x,y; //window pos
-    string test;
-
-    //Do map stuff, use standard IO
-    cin>>test;
-    cout<<test;
-
-    //do game setup
-
-    //init curses window
-    initCurses();
-    getyx(stdscr,y,x);
-
-    //game loop
-    while (input != 'q' && time != 0)
-    {
-     if (input == 'c') { // this part will force a refresh
-         clear();
-         //refresh(); //might be a better function here
-         printw("Forced Refresh \n",time);
-         //printw("%c",input);
-     } 
-        input = wgetch(stdscr);
-//        move(y,0); //move cursor to current line start
-//        clrtoeol(); //clear to EoL
-//        move(y,x); //move cursor back //may not be needed with EOL
-      
-        clear();
-        printw("Time left: %d\n",time);
-        printw("%c",input);
-        if (input != 'c'){
-         time--;
-        }
-    }
-
-    //game is over
-    endCurses();
-    return 0;
-} */
-
-/*
-void initCurses(){
-    // Curses Initialisations
-    initscr();
-    raw();
-    keypad(stdscr, TRUE);
-    noecho();
-    printw("Welcome - Press Q to Exit\n");
-}
-void endCurses(){
-    refresh();
-    printw("\nRound over\n");
-    getch(); //Make user press any key to close
-    endwin();
-}
-*/
-class Player{
+class Player : public  CharMap {
     public:
-    Player (WINDOW * win, int t, int y, char c);
+    Player (WINDOW * win, CharMap height, CharMap width, char c);
     void myup();
     void mydown();
     void myleft();
@@ -115,10 +51,12 @@ class Player{
 
 };
 
-Player::Player(WINDOW * win, int y, int x, char c) {
+
+
+Player::Player(WINDOW * win,  CharMap height, CharMap width, char c) {
 curwin= win;
-yLoc = y;
-xLoc = x;
+yLoc =  CharMap::height;
+xLoc = CharMap::width;
 getmaxyx(curwin, yMax, xMax);
 keypad(curwin, true);
 character = c;
@@ -184,15 +122,13 @@ mvwaddch(curwin, yLoc, xLoc, character);
 
 
 
-
-
-
-
 int main(int argc, char **argv){ 
     //incurses start
     initscr();
     noecho();
     cbreak();
+   // printw("choose Team: \n ", "cheese");
+    
 
 //	srand(time(NULL)); //Comment out to always have the same RNG for debugging
     CharMap *map = (argc == 2) ? new CharMap(argv[1]) : NULL; //Read in input file
@@ -210,13 +146,13 @@ getmaxyx(stdscr, yMax, xMax);
 
 //creates the window for our input
 
-WINDOW * playwin =newwin(400,1006, (yMax/2)-10,10);
+WINDOW * playwin =newwin(6,10, (yMax/2)-10,1);
 box(playwin, 0, 0);
 refresh();
 wrefresh(playwin);
 
 //adds the player
-Player * p = new Player(playwin, 1, 1, '@');
+Player * p = new Player(playwin, CharMap::width(), CharMap::height(), '@');
 
 do {
     p-> display();
