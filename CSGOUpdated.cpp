@@ -1,26 +1,26 @@
 
-/*
- * The actual in main
- */
-//#include <string>
-#include <iostream>
+//Created by Trevian Joubert
+//Dedicated to all the competitive gamers out there.
+//Compile as: g++ ast12.cpp -lncurses
+
+//#include<iostream>    //cin/cout NOT USED. DO NOT ENABLE!
 #include<fstream>       //File Streams
 #include<ncurses.h>     //N Curses Library
 #include<stdlib.h>      //srand
 #include<time.h>        //time
-#include <stdio.h>
-
 #include<string> //to_string c++ 11 function
-#include<vector> //vectors, obviously, lol.
-using namespace std;
+#include<vector> //vectors, obviously, lol. 
 
 
+//using namespace std;
 
- void initCurses();
- void endCurses();
+
+// go back and add deconstructors for all
+void initCurses();
+void endCurses();
+
 class CharMap {
   public:
-    CharMap();
     CharMap(char *arg);
     CharMap(char** c, std::string m, int w, int h) : 
         map(c), mapName(m), width(w), height(h){}
@@ -32,144 +32,176 @@ class CharMap {
     int height;
 };
 
-
-
-class Player : public  CharMap {
+class ent_t{
     public:
-    Player (WINDOW * win, CharMap height, CharMap width, char c);
-    void myup();
-    void mydown();
-    void myleft();
-    void myright();
-    int getmv();
-    void display();
+    ent_t(int x, int y);
+    virtual char whatamI() = 0;
+    void setCoordinates(int x,int y);
+    int xp; // this will be able to set x position
+    int yp; // this will be able to set y position
+    
+};
 
-    private:
-    int xLoc, yLoc, xMax, yMax;
-    char character;
-    WINDOW *curwin;
+void ent_t::setCoordinates(int x, int y){
+    xp =x;
+    yp =y;
+    
+}
+char ent_t::whatamI(){ // might not have to declare here to keep it a pure function
+   
+    
+}
+
+class bomb_t : public ent_t{
+    public:
+    bool isPlanted;
+    bool isCarried;
+    bool isDefused;
+    char whatamI(){
+       return 'B';
+        
+    }
+    bomb_t(int xx, int yy) : ent_t(xx,yy) {
+
+    isPlanted = false;
+    isCarried = false;
+    isDefused = false;
+ }
+
+
+    ~bomb_t();
+};
+
+class projectile_t: public ent_t{
+    public:
+    char whatamI(){
+        return '*';
+    }
+    projectile_t();
+    char direction;
+    ent_t * owner;
+
+    ~projectile_t();
+};
+
+class player_t: public ent_t{
+    public:
+    char whatamI(){
+            // need to make it depending on which team the entity is on.
+            return 'T'; // if terr
+            return 'C'; // if count
+        }
+    void isHuman();
+    bomb_t *bomb =NULL;
+    void lastDirection();
+    enum status: bool; // checks to see if the players are dead or not might not be a bool type
+    char Team;
+    void RIP(std::vector<ent_t*>& p_entList);
+
+};
+
+    class point_t {
+        public:
+        char whatamI(){
+            // need to make it depending on which team the entity is on.
+            return 'T'; // if terr
+            return 'C'; // if count
+        }
+        point_t();
+        void IsBombsite();
+        void isObstacle();
+        void isWall();
+        void isBridgeTunnel();
+        char baseType;
+        int x,y;
+        std::vector<ent_t*>entList;
+        void renderPoint();
+        void deleteEntFromPoint(ent_t* e);
+
+
+
+    };
+
+    class Level{ // most important class
+    public:
+    point_t*** point;
+    int height;
+    int width;
+    CharMap* mapref;
+    void rounTimer();
+    void bombTimer();
+    void bombPlant();
+    void Taliave();
+    void Calive();
+    void endCondition();
+    Level(CharMap); // Constructor part that takes in CHarMap not sure how to write
+    void renderLevel();
+    void clearScreen();
+    void openNteamSelect();
+    void mapSearch();
+    void secondTick();
+    void checkRoundStatus();
+    ~Level();
+
+
+    };
+//end of game engine
+
+class BallisticDispatcher{
+    public:
+    std::vector<projectile_t*> projList;
+    Level * levelref;
+    void addProjectile(projectile_t* proj);
+    void updateAll ();
+  
+    static void postMovemenetChecks(Level *lvl, player_t *p);
+
+
+};
+
+class MovementDispatcher {
+    public:
+    int input;
+    static char readkeyinput();
+    static void makeMove(Level* lvl, player_t* p, char direction,
+BallisticDispatcher* ball);
+    static void postMovemenetChecks(Level *lvl, player_t *p);
+};
+  char MovementDispatcher::readkeyinput(){
+      
+
+
+ }
+class AIDispatcher{
+    public:
+     std::vector<player_t*> botList;
+    player_t* human;
+    bomb_t* bomb;
+    Level* levelref;
+    void totalBots();
+    BallisticDispatcher* ballref;
+    AIDispatcher();
+    void printStatus();
+    void checkForNewDead();
+    void updateAll();
+
 
 };
 
 
-
-Player::Player(WINDOW * win,  CharMap height, CharMap width, char c) {
-curwin= win;
-yLoc =  CharMap::height;
-xLoc = CharMap::width;
-getmaxyx(curwin, yMax, xMax);
-keypad(curwin, true);
-character = c;
-}
-
-void Player::myup(){
-    mvwaddch(curwin, yLoc, xLoc, ' ');
-    yLoc--;
-    if(yLoc <1)
-        yLoc = 1;
-
-}
-
-void Player::mydown(){
-    mvwaddch(curwin, yLoc, xLoc, ' ');
-    yLoc++;
-    if(yLoc > yMax-2)
-        yLoc = yMax-2;
-        
-}
-
-void Player::myleft(){
-    mvwaddch(curwin, yLoc, xLoc, ' ');
-    xLoc--;
-    if(xLoc <1)
-    xLoc = 1;
-}
-
-void Player::myright(){
-    mvwaddch(curwin, yLoc, xLoc, ' ');
-    xLoc++;
-    if(xLoc > xMax-2)
-        xLoc = xMax-2;
-
-}
-
-int Player::getmv(){
-    int choice = wgetch(curwin);
-    switch(choice){
-        case KEY_UP:
-        myup();
-        break;
-        case KEY_DOWN:
-        mydown();
-        break;
-        case KEY_LEFT:
-        myleft();
-        break;
-        case KEY_RIGHT:
-        myright();
-        break;
-        default:
-        break;
-
-    }
-    return choice;
-}
-
-void Player::display(){
-mvwaddch(curwin, yLoc, xLoc, character);
-}
-
-
-
-
-int main(int argc, char **argv){ 
-    //incurses start
-    initscr();
-    noecho();
-    cbreak();
-   // printw("choose Team: \n ", "cheese");
-    
-
+int main(int argc, char **argv){
 //	srand(time(NULL)); //Comment out to always have the same RNG for debugging
     CharMap *map = (argc == 2) ? new CharMap(argv[1]) : NULL; //Read in input file
     if(map == NULL){printf("Invalid Map File\n"); return 1;}  //close if no file given
     initCurses(); // Curses Initialisations
     map->print();
 
+    //Your Code Here
 
-
-
-//get screen size
-int yMax, xMax;
-
-getmaxyx(stdscr, yMax, xMax);
-
-//creates the window for our input
-
-WINDOW * playwin =newwin(6,10, (yMax/2)-10,1);
-box(playwin, 0, 0);
-refresh();
-wrefresh(playwin);
-
-//adds the player
-Player * p = new Player(playwin, CharMap::width(), CharMap::height(), '@');
-
-do {
-    p-> display();
-    wrefresh(playwin);
-} while(p->getmv() != 'x');
-
-//make sure programs wait before exiting
-//getch(); // not need at that moment
-endwin();
-
-delete map; map = NULL;
+    delete map; map = NULL;
     printw("\ngg ez\n");
     endCurses(); //END CURSES
-
-
-
-return 0;
+    return 0;
 }
 
 void initCurses(){
@@ -223,41 +255,3 @@ void CharMap::print(){ //call only after curses is initialized!
         printw("\n");
     }   
 }
-
-
-
-/*
-struct Bullet {
-    Vector3 Position;
-    Vector3 Rotation;
-}
-struct {
-    struct { 
-        Vector3 Position;
-        Vector3 Rotation;
-    } Ship;
-    Vector<Bullet*> Bullets;
-} Scene;
-
-void Update(void) {
-    if (Key.IsPressed(Space)) {
-        CreateNewBullet();
-    }
-}
-
-void UpdateBullets(void) {
-    for (Bullet bullet in Scene.Bullets)
-    {
-        // Delete bullets here if not longer used
-        // and move all others
-    }
-}
-void Draw(void) {
-    // Draw spaceship here
-    ....
-    // Draw bullets
-    for (Bullet bullet in Scene.Bullets) {
-        DrawBullet(bullet);
-    }
-}
-*/
